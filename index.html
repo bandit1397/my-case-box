@@ -48,6 +48,13 @@
     margin-top: 6px;
     font-size: 0.9em;
     color: #ff6600;
+    white-space: pre-line; /* ✅ 줄바꿈 표시 */
+  }
+  .tts-btn {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 0.9em;
+    cursor: pointer;
   }
   .loading {
     text-align: center;
@@ -79,7 +86,7 @@
 let lawsData = [];
 
 // ===============================
-// 2. JSON 로딩 (같은 폴더)
+// 2. JSON 로딩
 // ===============================
 fetch("./lawsData.json")
   .then(res => {
@@ -91,7 +98,6 @@ fetch("./lawsData.json")
     document.getElementById("searchBox").disabled = false;
     document.getElementById("results").innerHTML =
       "<p>검색어를 입력하세요.</p>";
-    console.log("법규 데이터 로드 완료", lawsData);
   })
   .catch(err => {
     document.getElementById("results").innerHTML =
@@ -100,12 +106,11 @@ fetch("./lawsData.json")
   });
 
 // ===============================
-// 3. 검색 함수
+// 3. 검색 함수 (다중 키워드 AND)
 // ===============================
 function searchLaw() {
   const input = document.getElementById("searchBox").value;
 
-  // 1️⃣ , 기준으로 키워드 분리
   const keywords = input
     .split(",")
     .map(k => k.trim().toLowerCase())
@@ -119,7 +124,6 @@ function searchLaw() {
     return;
   }
 
-  // 2️⃣ 모든 키워드가 포함된 경우만 필터링 (AND 조건)
   const results = lawsData.filter(item => {
     const text = item.text.toLowerCase();
     const note = item.note ? item.note.toLowerCase() : "";
@@ -137,20 +141,47 @@ function searchLaw() {
     return;
   }
 
-  // 3️⃣ 결과 출력
   results.forEach(item => {
     const div = document.createElement("div");
     div.className = "lawItem";
+
     div.innerHTML = `
       <h3>${item.law.join(" / ")}</h3>
       <p>${item.text}</p>
-      ${item.note ? `<p class="note">[현장 메모] ${item.note}</p>` : ""}
+      ${item.note ? `<p class="note">${item.note}</p>` : ""}
+      ${item.law.includes("형사소송법") && item.note ? `
+        <button class="tts-btn" onclick="speakText(\`${item.note}\`)">
+          🔊 체포 고지문 음성 출력
+        </button>
+      ` : ""}
     `;
+
     resultsDiv.appendChild(div);
   });
 }
+
 // ===============================
-// 4. 이벤트 연결
+// 4. TTS 함수
+// ===============================
+function speakText(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("이 브라우저는 음성출력을 지원하지 않습니다.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ko-KR";
+  utterance.rate = 0.85;   // 현장용 느리게
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// ===============================
+// 5. 이벤트 연결
 // ===============================
 document
   .getElementById("searchBox")
