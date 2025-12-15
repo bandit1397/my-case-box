@@ -106,7 +106,19 @@ fetch("./lawsData.json")
   });
 
 // ===============================
-// 3. 검색 함수 (다중 키워드 AND)
+// 3. 번호 제거 함수 (TTS 전용)
+// ===============================
+function removeLeadingNumbers(text) {
+  return text
+    // 줄 앞의 1. / 2) / 3 - 제거
+    .replace(/^\s*\d+[\.\)\-]?\s*/gm, "")
+    // 불필요한 공백 정리
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+// ===============================
+// 4. 검색 함수 (다중 키워드 AND)
 // ===============================
 function searchLaw() {
   const input = document.getElementById("searchBox").value;
@@ -145,12 +157,14 @@ function searchLaw() {
     const div = document.createElement("div");
     div.className = "lawItem";
 
+    const ttsText = item.note ? removeLeadingNumbers(item.note) : "";
+
     div.innerHTML = `
       <h3>${item.law.join(" / ")}</h3>
       <p>${item.text}</p>
       ${item.note ? `<p class="note">${item.note}</p>` : ""}
       ${item.law.includes("형사소송법") && item.note ? `
-        <button class="tts-btn" onclick="speakText(\`${item.note}\`)">
+        <button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
           🔊 체포 고지문 음성 출력
         </button>
       ` : ""}
@@ -161,7 +175,7 @@ function searchLaw() {
 }
 
 // ===============================
-// 4. TTS 함수
+// 5. TTS 함수
 // ===============================
 function speakText(text) {
   if (!("speechSynthesis" in window)) {
@@ -181,12 +195,13 @@ function speakText(text) {
 }
 
 // ===============================
-// 5. 이벤트 연결
+// 6. 이벤트 연결
 // ===============================
 document
   .getElementById("searchBox")
   .addEventListener("input", searchLaw);
 </script>
+
 
 </body>
 </html>
