@@ -165,18 +165,29 @@ function searchLaw() {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    const ttsText =
-      item.note && typeof item.note === "object"
-        ? removeLeadingNumbers(item.note.ko)
-        : item.note
-          ? removeLeadingNumbers(item.note)
-          : "";
+    // ✅ note 처리
+    let noteHtml = "";
+    let ttsText = "";
+
+    if (typeof item.note === "string") {
+      noteHtml = `<p class="note">${item.note}</p>`;
+      ttsText = removeLeadingNumbers(item.note);
+    }
+
+    // ✅ 형사소송법 + 다국어 note
+    if (item.law.includes("형사소송법") && typeof item.note === "object") {
+      const lang = "ko"; // ← 현재는 한국어 고정 (나중에 선택 가능)
+      const text = item.note[lang];
+
+      noteHtml = `<p class="note">${text}</p>`;
+      ttsText = removeLeadingNumbers(text);
+    }
 
     div.innerHTML = `
       <h3>${item.law.join(" / ")}</h3>
       <p>${item.text}</p>
-      ${item.note ? `<p class="note">${item.note}</p>` : ""}
-      ${item.law.includes("형사소송법") && item.note ? `
+      ${noteHtml}
+      ${ttsText ? `
         <button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
           🔊 체포 고지문 음성 출력
         </button>
@@ -185,6 +196,7 @@ function searchLaw() {
 
     resultsDiv.appendChild(div);
   });
+
 }
 
 // ===============================
