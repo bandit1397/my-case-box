@@ -68,6 +68,18 @@
 
 <h1>단속 법규 검색 시스템</h1>
 
+<div style="text-align:right; margin-bottom:10px;">
+  🌐 고지 언어 :
+  <select id="langSelect">
+    <option value="ko" selected>한국어</option>
+    <option value="en">English</option>
+    <option value="zh">中文</option>
+    <option value="ja">日本語</option>
+    <option value="vi">Tiếng Việt</option>
+  </select>
+</div>
+
+
 <input
   type="text"
   id="searchBox"
@@ -84,6 +96,7 @@
 // 1. 전역 데이터
 // ===============================
 let lawsData = [];
+let selectedLang = "ko";
 
 // ===============================
 // 2. JSON 로딩
@@ -165,19 +178,18 @@ function searchLaw() {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    // ✅ note 처리
     let noteHtml = "";
     let ttsText = "";
 
+    // 일반 문자열 note
     if (typeof item.note === "string") {
       noteHtml = `<p class="note">${item.note}</p>`;
       ttsText = removeLeadingNumbers(item.note);
     }
 
-    // ✅ 형사소송법 + 다국어 note
+    // 형사소송법 + 다국어
     if (item.law.includes("형사소송법") && typeof item.note === "object") {
-      const lang = "ko"; // ← 현재는 한국어 고정 (나중에 선택 가능)
-      const text = item.note[lang];
+      const text = item.note[selectedLang] || item.note["ko"];
 
       noteHtml = `<p class="note">${text}</p>`;
       ttsText = removeLeadingNumbers(text);
@@ -197,6 +209,7 @@ function searchLaw() {
     resultsDiv.appendChild(div);
   });
 
+
 }
 
 // ===============================
@@ -211,13 +224,23 @@ function speakText(text) {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "ko-KR";
-  utterance.rate = 0.85;   // 현장용 느리게
+
+  const langMap = {
+    ko: "ko-KR",
+    en: "en-US",
+    zh: "zh-CN",
+    ja: "ja-JP",
+    vi: "vi-VN"
+  };
+
+  utterance.lang = langMap[selectedLang] || "ko-KR";
+  utterance.rate = 0.85;
   utterance.pitch = 1.0;
   utterance.volume = 1.0;
 
   window.speechSynthesis.speak(utterance);
 }
+
 
 // ===============================
 // 6. 이벤트 연결
@@ -225,8 +248,14 @@ function speakText(text) {
 document
   .getElementById("searchBox")
   .addEventListener("input", searchLaw);
-</script>
 
+document
+  .getElementById("langSelect")
+  .addEventListener("change", e => {
+    selectedLang = e.target.value;
+    searchLaw(); // 언어 변경 시 즉시 재출력
+  });
+</script>
 
 </body>
 </html>
