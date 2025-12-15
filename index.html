@@ -156,7 +156,21 @@ function highlightText(text, keywords) {
 
   return highlighted;
 }
+  
+// ===============================
+// 3.2 전화번호 자동 링크 함수
+// ===============================
+function linkifyPhoneNumbers(text) {
+  if (!text) return text;
 
+  // 한국 전화번호 패턴 (02-XXXX-XXXX, 010-XXXX-XXXX 등)
+  const phoneRegex = /(\d{2,3}-\d{3,4}-\d{4})/g;
+
+  return text.replace(phoneRegex, number => {
+    const telNumber = number.replace(/-/g, "");
+    return `<a href="tel:${telNumber}" style="color:#007bff; text-decoration:underline;">${number}</a>`;
+  });
+}
 
 // ===============================
 // 4. 검색 함수 (다중 키워드 AND)
@@ -208,11 +222,16 @@ function searchLaw() {
     let showTTS = item.tts === true;
 
     // ✅ text 하이라이트
-    const highlightedText = highlightText(item.text, keywords);
+    const highlightedText = linkifyPhoneNumbers(
+      highlightText(item.text, keywords)
+    );
+
 
     // 일반 note
     if (typeof item.note === "string") {
-      const highlightedNote = highlightText(item.note, keywords);
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(item.note, keywords)
+      );
       noteHtml = `<p class="note">${highlightedNote}</p>`;
       ttsText = removeLeadingNumbers(item.note);
     }
@@ -220,7 +239,10 @@ function searchLaw() {
     // 다국어 note
     if (typeof item.note === "object") {
       const rawText = item.note[selectedLang] || item.note["ko"];
-      const highlightedNote = highlightText(rawText, keywords);
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(rawText, keywords)
+      );
+
       noteHtml = `<p class="note">${highlightedNote}</p>`;
       ttsText = removeLeadingNumbers(rawText);
     }
