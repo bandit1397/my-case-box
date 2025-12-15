@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단속 법규 검색 시스템</title>
+
+<style>
+  body {
+    font-family: "Apple SD Gothic Neo", sans-serif;
+    margin: 20px;
+    background: #f5f5f5;
+  }
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+  #searchBox {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+  #results {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+  .lawItem {
+    margin-bottom: 15px;
+    padding: 12px;
+    border-left: 5px solid #007bff;
+  }
+  .lawItem h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.05em;
+    color: #007bff;
+  }
+  .lawItem p {
+    margin: 0;
+    font-size: 0.95em;
+    line-height: 1.4;
+  }
+  .note {
+    margin-top: 6px;
+    font-size: 0.9em;
+    color: #ff6600;
+    white-space: pre-line; /* ✅ 줄바꿈 표시 */
+  }
+  .tts-btn {
+    margin-top: 8px;
+    padding: 6px 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+  }
+  .loading {
+    text-align: center;
+    color: #666;
+    font-size: 0.9em;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>단속 법규 검색 시스템</h1>
+
+<input
+  type="text"
+  id="searchBox"
+  placeholder="단어 입력 (예: 노점, 청소년, 심야, 신호위반)"
+  disabled
+/>
+
+<div id="results">
+  <p class="loading">법규 데이터 불러오는 중...</p>
+</div>
+
+<script>
+// ===============================
+// 1. 전역 데이터
+// ===============================
+let lawsData = [];
+
+// ===============================
+// 2. JSON 로딩
+// ===============================
+fetch("./lawsData.json")
+  .then(res => {
+    if (!res.ok) throw new Error("JSON 로딩 실패");
+    return res.json();
+  })
+  .then(data => {
+    lawsData = data;
+    document.getElementById("searchBox").disabled = false;
+    document.getElementById("results").innerHTML =
+      "<p>검색어를 입력하세요.</p>";
+  })
+  .catch(err => {
+    document.getElementById("results").innerHTML =
+      "<p style='color:red;'>법규 데이터 로딩 실패</p>";
+    console.error(err);
+  });
+
+// ===============================
+// 3. 번호 제거 함수 (TTS 전용)
+// ===============================
+function removeLeadingNumbers(text) {
+  return text
+    // 줄 앞의 1. / 2) / 3 - 제거
+    .replace(/^\s*\d+[\.\)\-]?\s*/gm, "")
+    // 불필요한 공백 정리
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+// ===============================
+// 4. 검색 함수 (다중 키워드 AND)
+// ===============================
+function searchLaw() {
+  const input = document.getElementById("searchBox").value;
+
+  const keywords = input
+    .split(",")
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0);
+
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
+
+  if (keywords.length === 0) {
+    resultsDiv.innerHTML = "<p>검색어를 입력해주세요.</p>";
+    return;
+  }
+
+  const results = lawsData.filter(item => {
+    const text = item.text.toLowerCase();
+
+    const noteText =
+      typeof item.note === "string"
+        ? item.note
+        : item.note
+          ? Object.values(item.note).join(" ")
+          : "";
+
+    const note = noteText.toLowerCase();
+    const lawText = item.law.join(" ").toLowerCase();
+
+    return keywords.every(keyword =>
+      text.includes(keyword) ||
+      note.includes(keyword) ||
+      lawText.includes(keyword)
+    );
+  });
+
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+    return;
+  }
+
+  results.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "lawItem";
+
+    // ✅ note 처리
+    let noteHtml = "";
+    let ttsText = "";
+
+    if (typeof item.note === "string") {
+      noteHtml = `<p class="note">${item.note}</p>`;
+      ttsText = removeLeadingNumbers(item.note);
+    }
+
+    // ✅ 형사소송법 + 다국어 note
+    if (item.law.includes("형사소송법") && typeof item.note === "object") {
+      const lang = "ko"; // ← 현재는 한국어 고정 (나중에 선택 가능)
+      const text = item.note[lang];
+
+      noteHtml = `<p class="note">${text}</p>`;
+      ttsText = removeLeadingNumbers(text);
+    }
+
+    div.innerHTML = `
+      <h3>${item.law.join(" / ")}</h3>
+      <p>${item.text}</p>
+      ${noteHtml}
+      ${ttsText ? `
+        <button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
+          🔊 체포 고지문 음성 출력
+        </button>
+      ` : ""}
+    `;
+
+    resultsDiv.appendChild(div);
+  });
+
+}
+
+// ===============================
+// 5. TTS 함수
+// ===============================
+function speakText(text) {
+  if (!("speechSynthesis" in window)) {
+    alert("이 브라우저는 음성출력을 지원하지 않습니다.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "ko-KR";
+  utterance.rate = 0.85;   // 현장용 느리게
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// ===============================
+// 6. 이벤트 연결
+// ===============================
+document
+  .getElementById("searchBox")
+  .addEventListener("input", searchLaw);
+</script>
+
+
+</body>
+</html>
