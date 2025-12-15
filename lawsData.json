@@ -27,7 +27,7 @@
   
   {
   "law": ["형사소송법"],
-  "text": "피의자 체포 시 고지사항",
+  "text": "피의자 체포 시 고지사항(미란다 원칙)",
   "note": {
     "ko": "\n\n1. 당신은 살인죄 현행범으로 체포되었습니다.\n2. 진술을 거부할 권리가 있습니다.\n3. 변호인을 선임할 권리가 있습니다.",
     "en": "Miranda Warning.\n\n1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to an attorney.",
