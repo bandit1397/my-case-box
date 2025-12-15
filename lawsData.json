@@ -26,10 +26,14 @@
   },
   
   {
-    "law": ["형사소송법"],
-    "text": "검사 또는 사법경찰관은 피의자를 체포하는 경우에는 피의사실의 요지. 체포의 이유와 변호인을 선임할 수 있음을 말하고 변명할 기회를 주어야 한다.",
-    "note": "미란다 원칙.\n\n1. 현행범으로 체포합니다.\n2. 진술거부권이 있습니다.\n3. 변호인을 선임할 권리가 있습니다."
-
+  "law": ["형사소송법"],
+  "text": "피의자 체포 시 고지사항",
+  "notice": {
+    "ko": "미란다 원칙.\n\n1. 당신은 살인죄 현행범으로 체포되었습니다.\n2. 진술을 거부할 권리가 있습니다.\n3. 변호인을 선임할 권리가 있습니다.",
+    "en": "Miranda Warning.\n\n1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to an attorney.",
+    "zh": "米兰达权利告知。\n\n1. 你因杀人现行犯被逮捕。\n2. 你有保持沉默的权利。\n3. 你有聘请律师的权利。",
+    "ja": "ミランダ原則。\n\n1. あなたは殺人の現行犯として逮捕されました。\n2. 黙秘権があります。\n3. 弁護士を選任する権利があります。",
+    "vi": "Quyền Miranda.\n\n1. Bạn bị bắt vì hành vi giết người quả tang.\n2. Bạn có quyền giữ im lặng.\n3. Bạn có quyền có luật sư."
   }
  
 ]
