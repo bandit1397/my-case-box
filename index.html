@@ -138,7 +138,15 @@ function searchLaw() {
 
   const results = lawsData.filter(item => {
     const text = item.text.toLowerCase();
-    const note = item.note ? item.note.toLowerCase() : "";
+
+    const noteText =
+      typeof item.note === "string"
+        ? item.note
+        : item.note
+          ? Object.values(item.note).join(" ")
+          : "";
+
+    const note = noteText.toLowerCase();
     const lawText = item.law.join(" ").toLowerCase();
 
     return keywords.every(keyword =>
@@ -157,7 +165,12 @@ function searchLaw() {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    const ttsText = item.note ? removeLeadingNumbers(item.note) : "";
+    const ttsText =
+      item.note && typeof item.note === "object"
+        ? removeLeadingNumbers(item.note.ko)
+        : item.note
+          ? removeLeadingNumbers(item.note)
+          : "";
 
     div.innerHTML = `
       <h3>${item.law.join(" / ")}</h3>
