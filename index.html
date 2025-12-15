@@ -39,16 +39,17 @@
     font-size: 1.05em;
     color: #007bff;
   }
-  .lawItem p {
+  .textContent {
     margin: 0;
     font-size: 0.95em;
     line-height: 1.4;
+    white-space: pre-line; /* ✅ text 줄바꿈 적용 */
   }
   .note {
     margin-top: 6px;
     font-size: 0.9em;
     color: #ff6600;
-    white-space: pre-line; /* ✅ 줄바꿈 표시 */
+    white-space: pre-line; /* ✅ note 줄바꿈 적용 */
   }
   .tts-btn {
     margin-top: 8px;
@@ -78,7 +79,6 @@
     <option value="vi">Tiếng Việt</option>
   </select>
 </div>
-
 
 <input
   type="text"
@@ -123,9 +123,7 @@ fetch("./lawsData.json")
 // ===============================
 function removeLeadingNumbers(text) {
   return text
-    // 줄 앞의 1. / 2) / 3 - 제거
     .replace(/^\s*\d+[\.\)\-]?\s*/gm, "")
-    // 불필요한 공백 정리
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
@@ -135,7 +133,6 @@ function removeLeadingNumbers(text) {
 // ===============================
 function searchLaw() {
   const input = document.getElementById("searchBox").value;
-
   const keywords = input
     .split(",")
     .map(k => k.trim().toLowerCase())
@@ -151,14 +148,12 @@ function searchLaw() {
 
   const results = lawsData.filter(item => {
     const text = item.text.toLowerCase();
-
     const noteText =
       typeof item.note === "string"
         ? item.note
         : item.note
           ? Object.values(item.note).join(" ")
           : "";
-
     const note = noteText.toLowerCase();
     const lawText = item.law.join(" ").toLowerCase();
 
@@ -190,14 +185,13 @@ function searchLaw() {
     // 형사소송법 + 다국어
     if (item.law.includes("형사소송법") && typeof item.note === "object") {
       const text = item.note[selectedLang] || item.note["ko"];
-
       noteHtml = `<p class="note">${text}</p>`;
       ttsText = removeLeadingNumbers(text);
     }
 
     div.innerHTML = `
       <h3>${item.law.join(" / ")}</h3>
-      <p>${item.text}</p>
+      <p class="textContent">${item.text}</p>
       ${noteHtml}
       ${ttsText ? `
         <button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
@@ -208,8 +202,6 @@ function searchLaw() {
 
     resultsDiv.appendChild(div);
   });
-
-
 }
 
 // ===============================
@@ -241,7 +233,6 @@ function speakText(text) {
   window.speechSynthesis.speak(utterance);
 }
 
-
 // ===============================
 // 6. 이벤트 연결
 // ===============================
@@ -255,7 +246,7 @@ document
     selectedLang = e.target.value;
     searchLaw(); // 언어 변경 시 즉시 재출력
   });
-</script>
 
+</script>
 </body>
 </html>
