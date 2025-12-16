@@ -1,11 +1,11 @@
 [
   {
   "law": ["형사소송법"],
-  "text": "피의자 체포 시 고지사항(미란다 원칙)",
+  "text": "미란다(살인)",
   "tts": true,
   "note": {
-    "ko": "\n\n1. 당신은 살인죄 현행범으로 체포되었습니다.\n2. 진술을 거부할 권리가 있습니다.\n3. 변호인을 선임할 권리가 있습니다.",
-    "en": "\n\n1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to an attorney.",
+    "ko": "\n\n1. 당신을 살인죄 현행범으로 체포합니다.\n2. 변호인을 선임할 권리와\n3. 변명의 기회가 있고\n4. 일체의 진술거부권과 체포구속적부심심사 청구권이 있습니다",
+    "en": "\n\n1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to appoint a lawyer and have him or her present with you while you are being questioned.n4. You have the right to speak for yourself",
     "zh": "\n\n1. 你因杀人现行犯被逮捕。\n2. 你有保持沉默的权利。\n3. 你有聘请律师的权利。",
     "ja": "\n\n1. あなたは殺人の現行犯として逮捕されました。\n2. 黙秘権があります。\n3. 弁護士を選任する権利があります。",
     "vi": "\n\n1. Bạn bị bắt vì hành vi giết người quả tang.\n2. Bạn có quyền giữ im lặng.\n3. Bạn có quyền có luật sư."
