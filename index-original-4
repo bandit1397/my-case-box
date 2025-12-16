@@ -106,24 +106,30 @@ let lawsData = [];
 let selectedLang = "ko";
 
 // ===============================
-// 2. JSON 로딩
+// 2. JSON 로딩 (다중 파일 통합)
 // ===============================
-fetch("./lawsData.json")
-  .then(res => {
-    if (!res.ok) throw new Error("JSON 로딩 실패");
-    return res.json();
-  })
-  .then(data => {
-    lawsData = data;
-    document.getElementById("searchBox").disabled = false;
-    document.getElementById("results").innerHTML =
-      "<p>검색어를 입력하세요.</p>";
-  })
-  .catch(err => {
-    document.getElementById("results").innerHTML =
-      "<p style='color:red;'>법규 데이터 로딩 실패</p>";
-    console.error(err);
-  });
+const jsonFiles = [
+  "./data/laws_criminal.json",
+  "./data/laws_traffic.json",
+  "./data/laws_contacts.json",
+  "./data/laws_procedure.json",
+  "./data/laws_admin.json"
+];
+
+Promise.allSettled(
+  jsonFiles.map(file =>
+    fetch(file).then(res => res.ok ? res.json() : [])
+  )
+).then(results => {
+  lawsData = results
+    .filter(r => r.status === "fulfilled")
+    .flatMap(r => r.value);
+
+  document.getElementById("searchBox").disabled = false;
+  document.getElementById("results").innerHTML =
+    "<p>검색어를 입력하세요.</p>";
+});
+
 
 // ===============================
 // 3. 번호 제거 함수 (TTS 전용)
