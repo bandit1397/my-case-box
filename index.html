@@ -256,7 +256,7 @@ function getSelectedCategories() {
 
 
 // ===============================
-// 4. 검색 함수 (다중 키워드 AND)
+// 4. 검색 함수 (다중 키워드 AND + TAG 검색 포함)
 // ===============================
 function searchLaw() {
   const input = document.getElementById("searchBox").value;
@@ -276,7 +276,10 @@ function searchLaw() {
   const selectedCategories = getSelectedCategories();
 
   const results = lawsData.filter(item => {
-    // ✅ 카테고리 필터
+
+    // ==========================
+    // 1️⃣ 카테고리 필터 유지
+    // ==========================
     if (
       selectedCategories.length > 0 &&
       !selectedCategories.includes(item._category)
@@ -284,82 +287,102 @@ function searchLaw() {
       return false;
     }
 
+    // ==========================
+    // 2️⃣ 문자열 기반 기본 검색
+    // ==========================
+    const lawText = (item.law || []).join(" ").toLowerCase();
+
     const text = (item.text || "").toLowerCase();
+
     const noteText =
       typeof item.note === "string"
         ? item.note
         : item.note
-          ? Object.values(item.note).join(" ")
-          : "";
+        ? Object.values(item.note).join(" ")
+        : "";
     const note = noteText.toLowerCase();
-    const lawText = item.law.join(" ").toLowerCase();
 
+
+    // ==========================
+    // 3️⃣ TAG 검색 기능 추가
+    // ==========================
+    let tagString = "";
+
+    if (Array.isArray(item.tags)) {
+      tagString = item.tags.join(" ").toLowerCase();
+    }
+
+    // ======================================
+    // 4️⃣ 모든 조건 통합 → AND 검색 구조
+    // ======================================
     return keywords.every(keyword =>
+      lawText.includes(keyword) ||
       text.includes(keyword) ||
       note.includes(keyword) ||
-      lawText.includes(keyword)
+      tagString.includes(keyword)
     );
   });
 
 
+  // ==========================
+  // 결과 없으면 메시지 유지
+  // ==========================
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
     return;
   }
 
+
+  // ==========================
+  // 결과 표시 렌더
+  // ==========================
   results.forEach(item => {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    let noteHtml = "";
-    let ttsText = "";
-    let showTTS = item.tts === true;
+    const highlightedLaw =
+      highlightText(item.law.join(" "), keywords);
 
-    // ✅ text 하이라이트
-    const highlightedText = linkifyPhoneNumbers(
-      highlightText(item.text, keywords)
-    );
-
-
-    // 일반 note
-    if (typeof item.note === "string") {
-      const highlightedNote = linkifyPhoneNumbers(
-        highlightText(item.note, keywords)
+    const highlightedText =
+      linkifyPhoneNumbers(
+        highlightText(item.text, keywords)
       );
-      noteHtml = `<p class="note">${highlightedNote}</p>`;
-      ttsText = removeLeadingNumbers(item.note);
+
+    let noteHtml = "";
+
+    if (typeof item.note === "string") {
+      noteHtml =
+        `<p class="note">` +
+        linkifyPhoneNumbers(
+          highlightText(item.note, keywords)
+        ) +
+        `</p>`;
     }
 
-    // 다국어 note
     if (typeof item.note === "object") {
-      const rawText = item.note[selectedLang] || item.note["ko"];
-      const highlightedNote = linkifyPhoneNumbers(
-        highlightText(rawText, keywords)
-      );
+      const raw =
+        item.note[selectedLang] || item.note["ko"];
 
-      noteHtml = `<p class="note">${highlightedNote}</p>`;
-      ttsText = removeLeadingNumbers(rawText);
+      noteHtml =
+        `<p class="note">` +
+        linkifyPhoneNumbers(
+          highlightText(raw, keywords)
+        ) +
+        `</p>`;
     }
 
     div.innerHTML = `
-      <h3>${highlightText(item.law.join(" / "), keywords)}</h3>
-      <p class="textContent" style="white-space: pre-line;">
+      <h3>${highlightedLaw}</h3>
+      <p style="white-space: pre-line;">
         ${highlightedText}
       </p>
       ${noteHtml}
-      ${
-        showTTS && ttsText
-          ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
-              🔊 고지문 음성 출력
-             </button>`
-          : ""
-      }
     `;
 
     resultsDiv.appendChild(div);
   });
-
 }
+
 
 // ===============================
 // 5. TTS 함수
