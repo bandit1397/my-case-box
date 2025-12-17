@@ -256,10 +256,9 @@ function getSelectedCategories() {
 
 
 // ===============================
-// 4. 검색 함수 (다중 키워드 AND + TAG 검색 포함)
+// 4. 검색 함수 (다중 키워드 AND)
 // ===============================
 function searchLaw() {
-
   const input = document.getElementById("searchBox").value;
   const keywords = input
     .split(",")
@@ -274,13 +273,10 @@ function searchLaw() {
     return;
   }
 
-  let selectedLang = document.getElementById("langSelect")?.value || "ko";
-  let showTTS = document.getElementById("ttsSwitch")?.checked;
-
   const selectedCategories = getSelectedCategories();
 
   const results = lawsData.filter(item => {
-
+    // ✅ 카테고리 필터
     if (
       selectedCategories.length > 0 &&
       !selectedCategories.includes(item._category)
@@ -288,29 +284,23 @@ function searchLaw() {
       return false;
     }
 
-    const lawText = (item.law || []).join(" ").toLowerCase();
-
     const text = (item.text || "").toLowerCase();
-
     const noteText =
       typeof item.note === "string"
         ? item.note
         : item.note
-        ? Object.values(item.note).join(" ")
-        : "";
+          ? Object.values(item.note).join(" ")
+          : "";
     const note = noteText.toLowerCase();
-
-    let tagString = Array.isArray(item.tags)
-      ? item.tags.join(" ").toLowerCase()
-      : "";
+    const lawText = item.law.join(" ").toLowerCase();
 
     return keywords.every(keyword =>
-      lawText.includes(keyword) ||
       text.includes(keyword) ||
       note.includes(keyword) ||
-      tagString.includes(keyword)
+      lawText.includes(keyword)
     );
   });
+
 
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
@@ -321,55 +311,42 @@ function searchLaw() {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    const highlightedLaw = highlightText(item.law.join(" "), keywords);
+    let noteHtml = "";
+    let ttsText = "";
+    let showTTS = item.tts === true;
 
-    const highlightedText =
-      linkifyPhoneNumbers(
-        highlightText(item.text || "", keywords)
+    // ✅ text 하이라이트
+    const highlightedText = linkifyPhoneNumbers(
+      highlightText(item.text, keywords)
+    );
+
+
+    // 일반 note
+    if (typeof item.note === "string") {
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(item.note, keywords)
+      );
+      noteHtml = `<p class="note">${highlightedNote}</p>`;
+      ttsText = removeLeadingNumbers(item.note);
+    }
+
+    // 다국어 note
+    if (typeof item.note === "object") {
+      const rawText = item.note[selectedLang] || item.note["ko"];
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(rawText, keywords)
       );
 
-    let noteHtml = "";
-
-    if (typeof item.note === "string") {
-      noteHtml =
-        `<p class="note">` +
-        linkifyPhoneNumbers(
-          highlightText(item.note, keywords)
-        ) +
-        `</p>`;
-    }
-
-    if (typeof item.note === "object") {
-
-      const noteContent =
-        item.note[selectedLang] ||
-        item.note["ko"] ||
-        Object.values(item.note)[0] ||
-        "";
-
-      noteHtml =
-        `<p class="note">` +
-        linkifyPhoneNumbers(
-          highlightText(noteContent, keywords)
-        ) +
-        `</p>`;
-    }
-
-    let ttsText = "";
-
-    if (item.ttsText) {
-      ttsText = item.ttsText[selectedLang] || item.ttsText["ko"] || "";
+      noteHtml = `<p class="note">${highlightedNote}</p>`;
+      ttsText = removeLeadingNumbers(rawText);
     }
 
     div.innerHTML = `
-      <h3>${highlightedLaw}</h3>
-
+      <h3>${highlightText(item.law.join(" / "), keywords)}</h3>
       <p class="textContent" style="white-space: pre-line;">
         ${highlightedText}
       </p>
-
       ${noteHtml}
-
       ${
         showTTS && ttsText
           ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
@@ -381,8 +358,8 @@ function searchLaw() {
 
     resultsDiv.appendChild(div);
   });
-}
 
+}
 
 // ===============================
 // 5. TTS 함수
