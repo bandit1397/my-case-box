@@ -8,13 +8,47 @@
 <style>
   body {
     font-family: "Apple SD Gothic Neo", sans-serif;
-    margin: 20px;
+    margin: 0;
     background: #f5f5f5;
+    display: flex;
+    height: 100vh;
   }
+
+  /* ===== 왼쪽 분류 패널 ===== */
+  #leftPanel {
+    width: 220px;
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  #leftPanel h2 {
+    margin-top: 0;
+    font-size: 1.1em;
+    color: #333;
+  }
+
+  .categoryItem {
+    margin-bottom: 10px;
+  }
+
+  .categoryItem label {
+    cursor: pointer;
+    font-size: 0.95em;
+  }
+
+  /* ===== 오른쪽 메인 영역 ===== */
+  #rightPanel {
+    flex: 1;
+    padding: 20px;
+  }
+
   h1 {
     text-align: center;
     color: #333;
   }
+
   #searchBox {
     width: 100%;
     padding: 12px;
@@ -23,61 +57,78 @@
     border-radius: 6px;
     border: 1px solid #ccc;
   }
+
   #results {
     background: white;
     padding: 15px;
     border-radius: 6px;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
   }
+
   .lawItem {
     margin-bottom: 15px;
     padding: 12px;
     border-left: 5px solid #007bff;
   }
+
   .lawItem h3 {
     margin: 0 0 6px 0;
     font-size: 1.05em;
     color: #007bff;
   }
-  .textContent {
-    margin: 0;
-    font-size: 0.95em;
-    line-height: 1.4;
-    white-space: pre-line; /* ✅ text 줄바꿈 적용 */
-  }
+
   .note {
     margin-top: 6px;
     font-size: 0.9em;
     color: #ff6600;
-    white-space: pre-line; /* ✅ note 줄바꿈 적용 */
+    white-space: pre-line;
   }
-  .tts-btn {
-    margin-top: 8px;
-    padding: 6px 10px;
-    font-size: 0.9em;
-    cursor: pointer;
-  }
-  .loading {
-    text-align: center;
-    color: #666;
-    font-size: 0.9em;
-  }
+
   .highlight {
-    background-color: #fff3cd;   /* 연한 노랑 */
-    color: #d63300;              /* 가독성 좋은 강조색 */
+    background-color: #fff3cd;
+    color: #d63300;
     font-weight: 600;
     padding: 0 2px;
     border-radius: 3px;
   }
+
 </style>
 </head>
 
 <body>
 
-<h1>업무 검색 박스</h1>
+<!-- ================== 왼쪽 분류 UI  ================== -->
+<div id="leftPanel">
+  <h2>검색 범위</h2>
 
-<div style="text-align:right; margin-bottom:10px;">
-  🌐 고지 언어 :
+  <div class="categoryItem">
+    <input type="checkbox" value="criminal" checked>
+    <label>형사</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="traffic" checked>
+    <label>교통</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="contacts" checked>
+    <label>연락처</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="procedure" checked>
+    <label>절차</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="admin" checked>
+    <label>행정</label>
+  </div>
+
+  <br><br>
+
+  <h2>고지 언어</h2>
   <select id="langSelect">
     <option value="ko" selected>한국어</option>
     <option value="en">English</option>
@@ -85,26 +136,25 @@
     <option value="ja">日本語</option>
     <option value="vi">Tiếng Việt</option>
   </select>
+
 </div>
 
-<div style="margin-bottom:10px;">
-  🔍 검색 범위:
-  <label><input type="checkbox" value="criminal" checked> 형사</label>
-  <label><input type="checkbox" value="traffic" checked> 교통</label>
-  <label><input type="checkbox" value="contacts" checked> 연락처</label>
-  <label><input type="checkbox" value="procedure" checked> 절차</label>
-  <label><input type="checkbox" value="admin" checked> 행정</label>
-</div>
+<!-- ================== 오른쪽 검색 영역 ================== -->
+<div id="rightPanel">
 
-<input
-  type="text"
-  id="searchBox"
-  placeholder="단어 입력 (예: 노점, 청소년, 심야, 신호위반)"
-  disabled
-/>
+  <h1>업무 검색 박스</h1>
 
-<div id="results">
-  <p class="loading">법규 데이터 불러오는 중...</p>
+  <input
+    type="text"
+    id="searchBox"
+    placeholder="단어 입력 (예: 노점, 청소년, 심야, 신호위반)"
+    disabled
+  />
+
+  <div id="results">
+    <p class="loading">법규 데이터 불러오는 중...</p>
+  </div>
+
 </div>
 
 <script>
