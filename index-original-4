@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>단속 법규 검색 시스템</title>
+<title>단속 법규 검색 시스템 + 3단 트리 구조 통합</title>
 
 <style>
   body {
@@ -16,7 +16,7 @@
 
   /* ===== 왼쪽 분류 패널 ===== */
   #leftPanel {
-    width: 220px;
+    width: 260px;
     background: #ffffff;
     border-right: 1px solid #ddd;
     padding: 15px;
@@ -36,6 +36,13 @@
   .categoryItem label {
     cursor: pointer;
     font-size: 0.95em;
+  }
+
+  select {
+    width: 100%;
+    font-size: 0.95em;
+    padding: 4px;
+    margin-bottom: 10px;
   }
 
   /* ===== 오른쪽 메인 영역 ===== */
@@ -99,6 +106,7 @@
 
 <!-- ================== 왼쪽 분류 UI  ================== -->
 <div id="leftPanel">
+
   <h2>검색 범위</h2>
 
   <div class="categoryItem">
@@ -126,9 +134,19 @@
     <label>행정</label>
   </div>
 
+  <br>
+
+  <!-- ============= 3단 트리 라디오 ================ -->
+  <h2>3단 트리 검색</h2>
+
+  <select id="treeLaw"></select>
+  <select id="treeSection"></select>
+  <select id="treeArticle"></select>
+
   <br><br>
 
   <h2>고지 언어</h2>
+
   <select id="langSelect">
     <option value="ko" selected>한국어</option>
     <option value="en">English</option>
@@ -164,6 +182,11 @@
 let lawsData = [];
 let selectedLang = "ko";
 
+// 트리 데이터 저장용
+let treeLawValues = [];
+let treeSectionValues = [];
+let treeArticleValues = [];
+
 // ===============================
 // 2. JSON 로딩 (다중 파일 통합)
 // ===============================
@@ -182,14 +205,17 @@ Promise.allSettled(
       .then(data =>
         data.map(item => ({
           ...item,
-          _category: info.category   // ⭐ 핵심
+          _category: info.category
         }))
       )
   )
 ).then(results => {
+
   lawsData = results
     .filter(r => r.status === "fulfilled")
     .flatMap(r => r.value);
+
+  buildTreeStructure();
 
   document.getElementById("searchBox").disabled = false;
   document.getElementById("results").innerHTML =
@@ -197,9 +223,67 @@ Promise.allSettled(
 });
 
 
+// ===============================
+// 3단 트리 생성
+// ===============================
+function buildTreeStructure() {
+
+  treeLawValues = [...new Set(
+    lawsData.map(v => v.top)
+  )];
+
+
+  document.getElementById("treeLaw").innerHTML =
+    `<option value="">전체</option>` +
+    treeLawValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  updateTreeSection();
+}
+
+function updateTreeSection() {
+
+  const law = document.getElementById("treeLaw").value;
+
+  treeSectionValues = [...new Set(
+    lawsData.filter(v => !law || v.top === law)
+      .map(v => v.mid)
+  )];
+
+  document.getElementById("treeSection").innerHTML =
+    `<option value="">전체</option>` +
+    treeSectionValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  updateTreeArticle();
+}
+
+function updateTreeArticle() {
+
+  const law = document.getElementById("treeLaw").value;
+  const section = document.getElementById("treeSection").value;
+
+  treeArticleValues = [...new Set(
+    lawsData
+      .filter(v => !law || v.top === law)
+      .filter(v => !section || v.mid === section)
+      .map(v => v.sub)
+  )];
+
+  document.getElementById("treeArticle").innerHTML =
+    `<option value="">전체</option>` +
+    treeArticleValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  searchLaw();
+}
+
 
 // ===============================
-// 3. 번호 제거 함수 (TTS 전용)
+// 3. 유틸 함수
 // ===============================
 function removeLeadingNumbers(text) {
   return text
@@ -207,10 +291,6 @@ function removeLeadingNumbers(text) {
     .replace(/\n{2,}/g, "\n")
     .trim();
 }
-
-// ===============================
-// 3.1 키워드 강조 함수
-// ===============================
 
 function highlightText(text, keywords) {
   if (!text || keywords.length === 0) return text;
@@ -229,14 +309,10 @@ function highlightText(text, keywords) {
 
   return highlighted;
 }
-  
-// ===============================
-// 3.2 전화번호 자동 링크 함수
-// ===============================
+
 function linkifyPhoneNumbers(text) {
   if (!text) return text;
 
-  // 한국 전화번호 패턴 (02-XXXX-XXXX, 010-XXXX-XXXX 등)
   const phoneRegex = /(\d{2,3}-\d{3,4}-\d{4})/g;
 
   return text.replace(phoneRegex, number => {
@@ -245,8 +321,6 @@ function linkifyPhoneNumbers(text) {
   });
 }
 
-// ✅ 3.3 선택된 카테고리 가져오기 (← 여기에 위치)
-// ===============================
 function getSelectedCategories() {
   return Array.from(
     document.querySelectorAll('input[type="checkbox"]:checked')
@@ -256,10 +330,12 @@ function getSelectedCategories() {
 
 
 // ===============================
-// 4. 검색 함수 (키워드 + TAG + 카테고리 AND)
+// 4. 검색
 // ===============================
 function searchLaw() {
+
   const input = document.getElementById("searchBox").value;
+
   const keywords = input
     .split(",")
     .map(k => k.trim().toLowerCase())
@@ -268,25 +344,27 @@ function searchLaw() {
   const resultsDiv = document.getElementById("results");
   resultsDiv.innerHTML = "";
 
-  if (keywords.length === 0) {
-    resultsDiv.innerHTML = "<p>검색어를 입력해주세요.</p>";
-    return;
-  }
-
   const selectedCategories = getSelectedCategories();
+
+  const treeLaw = document.getElementById("treeLaw").value;
+  const treeSection = document.getElementById("treeSection").value;
+  const treeArticle = document.getElementById("treeArticle").value;
 
   const results = lawsData.filter(item => {
 
-    // 1️⃣ 카테고리 조건 유지
-    if (
-      selectedCategories.length > 0 &&
-      !selectedCategories.includes(item._category)
-    ) {
+    if (selectedCategories.length > 0 &&
+      !selectedCategories.includes(item.category))
       return false;
-    }
 
-    // 2️⃣ 문자열 검색 준비
-    const lawText = (item.law || []).join(" ").toLowerCase();
+    if (treeLaw && item.category !== treeLaw) return false;
+    if (treeSection && item.section !== treeSection) return false;
+    if (treeArticle && item.lawTitle !== treeArticle) return false;
+
+    if (keywords.length === 0) return true;
+
+    const lawText =
+    `${item.top || ""} ${item.mid || ""} ${item.sub || ""}`.toLowerCase();
+
     const text = (item.text || "").toLowerCase();
 
     const noteText =
@@ -295,35 +373,31 @@ function searchLaw() {
         : item.note
         ? Object.values(item.note).join(" ")
         : "";
+
     const note = noteText.toLowerCase();
 
-    // 3️⃣ TAG 처리 (없으면 빈 문자열 처리)
     let tagString = "";
     if (Array.isArray(item.tags)) {
       tagString = item.tags.join(" ").toLowerCase();
     }
 
-    // 4️⃣ AND 검색 처리
     return keywords.every(keyword =>
       lawText.includes(keyword) ||
       text.includes(keyword) ||
       note.includes(keyword) ||
       tagString.includes(keyword)
     );
-
-  }); // end of filter
-
+  });
 
 
-  // ===============================
-  // 결과 표시
-  // ===============================
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
     return;
   }
 
+
   results.forEach(item => {
+
     const div = document.createElement("div");
     div.className = "lawItem";
 
@@ -335,32 +409,40 @@ function searchLaw() {
       highlightText(item.text, keywords)
     );
 
-    // STRING note
     if (typeof item.note === "string") {
+
       const highlightedNote = linkifyPhoneNumbers(
         highlightText(item.note, keywords)
       );
+
       noteHtml = `<p class="note">${highlightedNote}</p>`;
       ttsText = removeLeadingNumbers(item.note);
     }
 
-    // OBJECT note
     if (typeof item.note === "object") {
-      const rawText = item.note[selectedLang] || item.note["ko"];
+
+      const raw = item.note[selectedLang] || item.note["ko"];
+
       const highlightedNote = linkifyPhoneNumbers(
-        highlightText(rawText, keywords)
+        highlightText(raw, keywords)
       );
 
       noteHtml = `<p class="note">${highlightedNote}</p>`;
-      ttsText = removeLeadingNumbers(rawText);
+      ttsText = removeLeadingNumbers(raw);
     }
 
     div.innerHTML = `
-      <h3>${highlightText(item.law.join(" / "), keywords)}</h3>
+      <h3>${item.top}
+      ${item.mid ? " / " + item.mid : ""}
+      ${item.sub ? " / " + item.sub : ""}</h3>
+
+
       <p class="textContent" style="white-space: pre-line;">
         ${highlightedText}
       </p>
+
       ${noteHtml}
+
       ${
         showTTS && ttsText
           ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
@@ -374,10 +456,13 @@ function searchLaw() {
   });
 }
 
+
+
 // ===============================
-// 5. TTS 함수
+// 5. TTS 음성 출력
 // ===============================
 function speakText(text) {
+
   if (!("speechSynthesis" in window)) {
     alert("이 브라우저는 음성출력을 지원하지 않습니다.");
     return;
@@ -403,6 +488,8 @@ function speakText(text) {
   window.speechSynthesis.speak(utterance);
 }
 
+
+
 // ===============================
 // 6. 이벤트 연결
 // ===============================
@@ -422,6 +509,15 @@ document
   .forEach(cb => {
     cb.addEventListener("change", searchLaw);
   });
+
+document.getElementById("treeLaw")
+  .addEventListener("change", updateTreeSection);
+
+document.getElementById("treeSection")
+  .addEventListener("change", updateTreeArticle);
+
+document.getElementById("treeArticle")
+  .addEventListener("change", searchLaw);
 
 
 </script>
