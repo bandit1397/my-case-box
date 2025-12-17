@@ -13,7 +13,7 @@
       "vi": "1. Bạn bị bắt vì hành vi giết người quả tang.\n2. Bạn có quyền giữ im lặng.\n3. Bạn có quyền có luật sư."
     },
     "tags": ["형사", "살인", "미란다", "체포", "권리고지"],
-    "category": "criminal"
+    "category": "procedure"
   },
 
   {
@@ -30,6 +30,6 @@
       "vi": "1. Tôi xác nhận rằng.\n2. Cảnh sát yêu cầu tôi đi cùng tự nguyện.\n3. Tôi được thông báo rằng đây không phải là bắt giữ.\n4. Tôi có thể từ chối đi cùng.\n5. Tôi có thể rời đi bất cứ lúc nào.\n6. Tôi hiểu và đồng ý tự nguyện."
     },
     "tags": ["임의동행", "권리고지", "동의서"],
-    "category": "criminal"
+    "category": "procedure"
   }
 ]
