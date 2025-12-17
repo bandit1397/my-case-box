@@ -259,6 +259,7 @@ function getSelectedCategories() {
 // 4. 검색 함수 (다중 키워드 AND + TAG 검색 포함)
 // ===============================
 function searchLaw() {
+
   const input = document.getElementById("searchBox").value;
   const keywords = input
     .split(",")
@@ -273,13 +274,13 @@ function searchLaw() {
     return;
   }
 
+  let selectedLang = document.getElementById("langSelect")?.value || "ko";
+  let showTTS = document.getElementById("ttsSwitch")?.checked;
+
   const selectedCategories = getSelectedCategories();
 
   const results = lawsData.filter(item => {
 
-    // ==========================
-    // 1️⃣ 카테고리 필터 유지
-    // ==========================
     if (
       selectedCategories.length > 0 &&
       !selectedCategories.includes(item._category)
@@ -287,9 +288,6 @@ function searchLaw() {
       return false;
     }
 
-    // ==========================
-    // 2️⃣ 문자열 기반 기본 검색
-    // ==========================
     const lawText = (item.law || []).join(" ").toLowerCase();
 
     const text = (item.text || "").toLowerCase();
@@ -302,19 +300,10 @@ function searchLaw() {
         : "";
     const note = noteText.toLowerCase();
 
+    let tagString = Array.isArray(item.tags)
+      ? item.tags.join(" ").toLowerCase()
+      : "";
 
-    // ==========================
-    // 3️⃣ TAG 검색 기능 추가
-    // ==========================
-    let tagString = "";
-
-    if (Array.isArray(item.tags)) {
-      tagString = item.tags.join(" ").toLowerCase();
-    }
-
-    // ======================================
-    // 4️⃣ 모든 조건 통합 → AND 검색 구조
-    // ======================================
     return keywords.every(keyword =>
       lawText.includes(keyword) ||
       text.includes(keyword) ||
@@ -323,29 +312,20 @@ function searchLaw() {
     );
   });
 
-
-  // ==========================
-  // 결과 없으면 메시지 유지
-  // ==========================
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
     return;
   }
 
-
-  // ==========================
-  // 결과 표시 렌더
-  // ==========================
   results.forEach(item => {
     const div = document.createElement("div");
     div.className = "lawItem";
 
-    const highlightedLaw =
-      highlightText(item.law.join(" "), keywords);
+    const highlightedLaw = highlightText(item.law.join(" "), keywords);
 
     const highlightedText =
       linkifyPhoneNumbers(
-        highlightText(item.text, keywords)
+        highlightText(item.text || "", keywords)
       );
 
     let noteHtml = "";
@@ -360,20 +340,21 @@ function searchLaw() {
     }
 
     if (typeof item.note === "object") {
-      const raw =
-        item.note[selectedLang] || item.note["ko"];
+
+      const noteContent =
+        item.note[selectedLang] ||
+        item.note["ko"] ||
+        Object.values(item.note)[0] ||
+        "";
 
       noteHtml =
         `<p class="note">` +
         linkifyPhoneNumbers(
-          highlightText(raw, keywords)
+          highlightText(noteContent, keywords)
         ) +
         `</p>`;
     }
 
-// ---------------------------
-// TTS 텍스트 구성
-// ---------------------------
     let ttsText = "";
 
     if (item.ttsText) {
@@ -382,10 +363,13 @@ function searchLaw() {
 
     div.innerHTML = `
       <h3>${highlightedLaw}</h3>
+
       <p class="textContent" style="white-space: pre-line;">
         ${highlightedText}
       </p>
+
       ${noteHtml}
+
       ${
         showTTS && ttsText
           ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
@@ -396,9 +380,9 @@ function searchLaw() {
     `;
 
     resultsDiv.appendChild(div);
- });
-
+  });
 }
+
 
 // ===============================
 // 5. TTS 함수
