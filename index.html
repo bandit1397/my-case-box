@@ -229,8 +229,9 @@ Promise.allSettled(
 function buildTreeStructure() {
 
   treeLawValues = [...new Set(
-    lawsData.map(v => v.category)
+    lawsData.map(v => v.top)
   )];
+
 
   document.getElementById("treeLaw").innerHTML =
     `<option value="">전체</option>` +
@@ -246,8 +247,8 @@ function updateTreeSection() {
   const law = document.getElementById("treeLaw").value;
 
   treeSectionValues = [...new Set(
-    lawsData.filter(v => !law || v.category === law)
-      .map(v => v.section)
+    lawsData.filter(v => !law || v.top === law)
+      .map(v => v.mid)
   )];
 
   document.getElementById("treeSection").innerHTML =
@@ -266,9 +267,9 @@ function updateTreeArticle() {
 
   treeArticleValues = [...new Set(
     lawsData
-      .filter(v => !law || v.category === law)
-      .filter(v => !section || v.section === section)
-      .map(v => v.lawTitle)
+      .filter(v => !law || v.top === law)
+      .filter(v => !section || v.mid === section)
+      .map(v => v.sub)
   )];
 
   document.getElementById("treeArticle").innerHTML =
@@ -351,10 +352,9 @@ function searchLaw() {
 
   const results = lawsData.filter(item => {
 
-    if (
-      selectedCategories.length > 0 &&
-      !selectedCategories.includes(item._category)
-    ) return false;
+    if (selectedCategories.length > 0 &&
+      !selectedCategories.includes(item.category))
+      return false;
 
     if (treeLaw && item.category !== treeLaw) return false;
     if (treeSection && item.section !== treeSection) return false;
@@ -362,7 +362,9 @@ function searchLaw() {
 
     if (keywords.length === 0) return true;
 
-    const lawText = (item.law || []).join(" ").toLowerCase();
+    const lawText =
+    `${item.top || ""} ${item.mid || ""} ${item.sub || ""}`.toLowerCase();
+
     const text = (item.text || "").toLowerCase();
 
     const noteText =
@@ -430,7 +432,10 @@ function searchLaw() {
     }
 
     div.innerHTML = `
-      <h3>${highlightText(item.law.join(" / "), keywords)}</h3>
+      <h3>${item.top}
+      ${item.mid ? " / " + item.mid : ""}
+      ${item.sub ? " / " + item.sub : ""}</h3>
+
 
       <p class="textContent" style="white-space: pre-line;">
         ${highlightedText}
