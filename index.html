@@ -371,17 +371,32 @@ function searchLaw() {
         `</p>`;
     }
 
+// ---------------------------
+// TTS 텍스트 구성
+// ---------------------------
+    let ttsText = "";
+
+    if (item.ttsText) {
+      ttsText = item.ttsText[selectedLang] || item.ttsText["ko"] || "";
+    }
+
     div.innerHTML = `
       <h3>${highlightedLaw}</h3>
-      <p style="white-space: pre-line;">
+      <p class="textContent" style="white-space: pre-line;">
         ${highlightedText}
       </p>
       ${noteHtml}
+      ${
+        showTTS && ttsText
+          ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
+              🔊 고지문 음성 출력
+             </button>`
+          : ""
+      }
     `;
 
     resultsDiv.appendChild(div);
-  });
-}
+
 
 
 // ===============================
