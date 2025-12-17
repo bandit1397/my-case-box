@@ -87,6 +87,15 @@
   </select>
 </div>
 
+<div style="margin-bottom:10px;">
+  🔍 검색 범위:
+  <label><input type="checkbox" value="criminal" checked> 형사</label>
+  <label><input type="checkbox" value="traffic" checked> 교통</label>
+  <label><input type="checkbox" value="contacts" checked> 연락처</label>
+  <label><input type="checkbox" value="procedure" checked> 절차</label>
+  <label><input type="checkbox" value="admin" checked> 행정</label>
+</div>
+
 <input
   type="text"
   id="searchBox"
@@ -109,16 +118,23 @@ let selectedLang = "ko";
 // 2. JSON 로딩 (다중 파일 통합)
 // ===============================
 const jsonFiles = [
-  "./data/laws_criminal.json",
-  "./data/laws_traffic.json",
-  "./data/laws_contacts.json",
-  "./data/laws_procedure.json",
-  "./data/laws_admin.json"
+  { file: "./data/laws_criminal.json", category: "criminal" },
+  { file: "./data/laws_traffic.json", category: "traffic" },
+  { file: "./data/laws_contacts.json", category: "contacts" },
+  { file: "./data/laws_procedure.json", category: "procedure" },
+  { file: "./data/laws_admin.json", category: "admin" }
 ];
 
 Promise.allSettled(
-  jsonFiles.map(file =>
-    fetch(file).then(res => res.ok ? res.json() : [])
+  jsonFiles.map(info =>
+    fetch(info.file)
+      .then(res => res.ok ? res.json() : [])
+      .then(data =>
+        data.map(item => ({
+          ...item,
+          _category: info.category   // ⭐ 핵심
+        }))
+      )
   )
 ).then(results => {
   lawsData = results
@@ -129,6 +145,7 @@ Promise.allSettled(
   document.getElementById("results").innerHTML =
     "<p>검색어를 입력하세요.</p>";
 });
+
 
 
 // ===============================
@@ -178,6 +195,16 @@ function linkifyPhoneNumbers(text) {
   });
 }
 
+// ✅ 3.3 선택된 카테고리 가져오기 (← 여기에 위치)
+// ===============================
+function getSelectedCategories() {
+  return Array.from(
+    document.querySelectorAll('input[type="checkbox"]:checked')
+  ).map(cb => cb.value);
+}
+
+
+
 // ===============================
 // 4. 검색 함수 (다중 키워드 AND)
 // ===============================
@@ -196,8 +223,18 @@ function searchLaw() {
     return;
   }
 
+  const selectedCategories = getSelectedCategories();
+
   const results = lawsData.filter(item => {
-    const text = item.text.toLowerCase();
+    // ✅ 카테고리 필터
+    if (
+      selectedCategories.length > 0 &&
+      !selectedCategories.includes(item._category)
+    ) {
+      return false;
+    }
+
+    const text = (item.text || "").toLowerCase();
     const noteText =
       typeof item.note === "string"
         ? item.note
@@ -213,6 +250,7 @@ function searchLaw() {
       lawText.includes(keyword)
     );
   });
+
 
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
@@ -313,8 +351,15 @@ document
   .getElementById("langSelect")
   .addEventListener("change", e => {
     selectedLang = e.target.value;
-    searchLaw(); // 언어 변경 시 즉시 재출력
+    searchLaw();
   });
+
+document
+  .querySelectorAll('input[type="checkbox"]')
+  .forEach(cb => {
+    cb.addEventListener("change", searchLaw);
+  });
+
 
 </script>
 </body>
