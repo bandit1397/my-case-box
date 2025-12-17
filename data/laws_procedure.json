@@ -1,27 +1,35 @@
 [
   {
-  "top": "형사소송법",
-  "mid": "미란다(살인)",
-  "tts": true,
-  "note": {
-    "ko": "\n\n1. 당신을 살인죄 현행범으로 체포합니다.\n2. 변호인을 선임할 권리와\n3. 변명의 기회가 있고\n4. 일체의 진술거부권과 체포구속적부심심사 청구권이 있습니다",
-    "en": "\n\n1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to appoint a lawyer and have him or her present with you while you are being questioned.\n4. You have the right to speak for yourself",
-    "zh": "\n\n1. 你因杀人现行犯被逮捕。\n2. 你有保持沉默的权利。\n3. 你有聘请律师的权利。",
-    "ja": "\n\n1. あなたは殺人の現行犯として逮捕されました。\n2. 黙秘権があります。\n3. 弁護士を選任する権利があります。",
-    "vi": "\n\n1. Bạn bị bắt vì hành vi giết người quả tang.\n2. Bạn có quyền giữ im lặng.\n3. Bạn có quyền có luật sư."
-  }
- },
+    "top": "형사소송법",
+    "mid": "미란다(살인)",
+    "sub": "",
+    "text": "미란다 원칙 고지(살인 현행범 체포 시 필수)",
+    "tts": true,
+    "note": {
+      "ko": "1. 당신을 살인죄 현행범으로 체포합니다.\n2. 변호인을 선임할 권리와\n3. 변명의 기회가 있고\n4. 일체의 진술거부권과 체포구속적부심심사 청구권이 있습니다",
+      "en": "1. You are under arrest as a flagrant offender of murder.\n2. You have the right to remain silent.\n3. You have the right to appoint a lawyer and have him or her present with you while being questioned.\n4. You have the right to speak for yourself.",
+      "zh": "1. 你因杀人现行犯被逮捕。\n2. 你有保持沉默的权利。\n3. 你有聘请律师的权利。",
+      "ja": "1. あなたは殺人の現行犯として逮捕されました。\n2. 黙秘権があります。\n3. 弁護士を選任する権利があります。",
+      "vi": "1. Bạn bị bắt vì hành vi giết người quả tang.\n2. Bạn có quyền giữ im lặng.\n3. Bạn có quyền có luật sư."
+    },
+    "tags": ["형사", "살인", "미란다", "체포", "권리고지"],
+    "category": "criminal"
+  },
 
- {
-  "top": "임의동행동의서",
-  "mid": "임의동행",
-  "tts": true,
-  "note": {
-    "ko": "\n\n1. 본인은 위와 같은 내용으로 경찰관으로부터 동행을 요구 받았고.\n2. 동행을 거부할 수 있는 권리와\n3. 언제든지 자유롭게 동행과정에서 이탈 또는 동행장소에서 퇴거할 수 있는 권리가 있음을안내받았습니다\n4. 이에  자발적인 의사로 동행한 것임을 확인합니다",
-    "en": "\n\n1. I confirm that.\n2. A police officer asked me to go with them voluntarily at the time and place above.\n3. I was told that this is not an arrest.\n4. I was told that I can refuse to go with the police.\n5. I was told that I can leave freely at any time.\n6. I understand this and agree voluntarily to go with the police.",
-    "zh": "\n\n1. 我确认以下内容\n2. 警察在上述时间和地点 请求我自愿随行\n3. 我已被告知 这不是逮捕\n4. 我已被告知 我可以拒绝随警察前往\n5. 我已被告知 我可以在任何时候自由离开\n6. 我已理解以上内容 并自愿同意随警察前往",
-    "ja": "\n\n1. 私は次の内容を確認しました\n2. 警察官から 上記の日時・場所で 任意で一緒に行くよう求められました\n3. これは逮捕ではないと説明を受けました\n4. 警察と一緒に行くことを断ることができると説明を受けました\n5. いつでも自由に帰ることができると説明を受けました\n6. れらを理解し 自分の意思で同意して同行します",
-    "vi": "\n\n1. Tôi xác nhận rằng.\n2. Một cảnh sát đã đề nghị tôi đi cùng một cách tự nguyện tại thời gian và địa điểm nêu trên.\n3. Tôi được thông báo rằng đây không phải là bắt giữ.\n4. Tôi được thông báo rằng tôi có thể từ chối đi cùng cảnh sát.\n5. Tôi được thông báo rằng tôi có thể rời đi tự do bất cứ lúc nào.\n6. Tôi hiểu rõ những nội dung trên và tự nguyện đồng ý đi cùng cảnh sát."
+  {
+    "top": "임의동행동의서",
+    "mid": "임의동행",
+    "sub": "",
+    "text": "임의동행 시 권리고지 및 동의 확인",
+    "tts": true,
+    "note": {
+      "ko": "1. 본인은 위와 같은 내용으로 경찰관으로부터 동행을 요구 받았고.\n2. 동행을 거부할 수 있는 권리와\n3. 언제든지 자유롭게 동행과정에서 이탈 또는 동행장소에서 퇴거할 수 있는 권리가 있음을 안내받았습니다\n4. 이에 자발적인 의사로 동행한 것임을 확인합니다",
+      "en": "1. I confirm that.\n2. A police officer asked me to go with them voluntarily.\n3. I was told that this is not an arrest.\n4. I was told that I can refuse to go with the police.\n5. I was told that I can leave freely at any time.\n6. I understand this and agree voluntarily.",
+      "zh": "1. 我确认以下内容。\n2. 警察请求我自愿随行。\n3. 我已被告知这不是逮捕。\n4. 我可以拒绝随警察前往。\n5. 我可以随时自由离开。\n6. 我理解并自愿同意随行。",
+      "ja": "1. 私は次の内容を確認しました。\n2. 任意同行を求められました。\n3. これは逮捕ではないと説明されました。\n4. 同行を断ることができます。\n5. いつでも自由に帰れます。\n6. これらを理解し同行に同意します。",
+      "vi": "1. Tôi xác nhận rằng.\n2. Cảnh sát yêu cầu tôi đi cùng tự nguyện.\n3. Tôi được thông báo rằng đây không phải là bắt giữ.\n4. Tôi có thể từ chối đi cùng.\n5. Tôi có thể rời đi bất cứ lúc nào.\n6. Tôi hiểu và đồng ý tự nguyện."
+    },
+    "tags": ["임의동행", "권리고지", "동의서"],
+    "category": "criminal"
   }
- }
 ]
