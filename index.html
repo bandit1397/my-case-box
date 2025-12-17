@@ -256,7 +256,7 @@ function getSelectedCategories() {
 
 
 // ===============================
-// 4. 검색 함수 (다중 키워드 AND)
+// 4. 검색 함수 (키워드 + TAG + 카테고리 AND)
 // ===============================
 function searchLaw() {
   const input = document.getElementById("searchBox").value;
@@ -276,7 +276,8 @@ function searchLaw() {
   const selectedCategories = getSelectedCategories();
 
   const results = lawsData.filter(item => {
-    // ✅ 카테고리 필터
+
+    // 1️⃣ 카테고리 조건 유지
     if (
       selectedCategories.length > 0 &&
       !selectedCategories.includes(item._category)
@@ -284,24 +285,39 @@ function searchLaw() {
       return false;
     }
 
+    // 2️⃣ 문자열 검색 준비
+    const lawText = (item.law || []).join(" ").toLowerCase();
     const text = (item.text || "").toLowerCase();
+
     const noteText =
       typeof item.note === "string"
         ? item.note
         : item.note
-          ? Object.values(item.note).join(" ")
-          : "";
+        ? Object.values(item.note).join(" ")
+        : "";
     const note = noteText.toLowerCase();
-    const lawText = item.law.join(" ").toLowerCase();
 
+    // 3️⃣ TAG 처리 (없으면 빈 문자열 처리)
+    let tagString = "";
+    if (Array.isArray(item.tags)) {
+      tagString = item.tags.join(" ").toLowerCase();
+    }
+
+    // 4️⃣ AND 검색 처리
     return keywords.every(keyword =>
+      lawText.includes(keyword) ||
       text.includes(keyword) ||
       note.includes(keyword) ||
-      lawText.includes(keyword)
+      tagString.includes(keyword)
     );
-  });
+
+  }); // end of filter
 
 
+
+  // ===============================
+  // 결과 표시
+  // ===============================
   if (results.length === 0) {
     resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
     return;
@@ -315,13 +331,11 @@ function searchLaw() {
     let ttsText = "";
     let showTTS = item.tts === true;
 
-    // ✅ text 하이라이트
     const highlightedText = linkifyPhoneNumbers(
       highlightText(item.text, keywords)
     );
 
-
-    // 일반 note
+    // STRING note
     if (typeof item.note === "string") {
       const highlightedNote = linkifyPhoneNumbers(
         highlightText(item.note, keywords)
@@ -330,7 +344,7 @@ function searchLaw() {
       ttsText = removeLeadingNumbers(item.note);
     }
 
-    // 다국어 note
+    // OBJECT note
     if (typeof item.note === "object") {
       const rawText = item.note[selectedLang] || item.note["ko"];
       const highlightedNote = linkifyPhoneNumbers(
@@ -358,7 +372,6 @@ function searchLaw() {
 
     resultsDiv.appendChild(div);
   });
-
 }
 
 // ===============================
