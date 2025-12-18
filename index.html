@@ -222,10 +222,13 @@ Promise.allSettled(
 // ===============================
 function buildTreeStructure() {
 
-  treeLawValues = [...new Set(
-    lawsData.map(v => v.top)
-  )];
+  const selectedCategories = getSelectedCategories();
 
+  treeLawValues = [...new Set(
+    lawsData
+      .filter(v => selectedCategories.includes(v._category))
+      .map(v => v.top)
+  )];
 
   document.getElementById("treeLaw").innerHTML =
     `<option value="">전체</option>` +
@@ -236,12 +239,16 @@ function buildTreeStructure() {
   updateTreeSection();
 }
 
+
 function updateTreeSection() {
 
   const law = document.getElementById("treeLaw").value;
+  const selectedCategories = getSelectedCategories();
 
   treeSectionValues = [...new Set(
-    lawsData.filter(v => !law || v.top === law)
+    lawsData
+      .filter(v => selectedCategories.includes(v._category))
+      .filter(v => !law || v.top === law)
       .map(v => v.mid)
   )];
 
@@ -254,13 +261,17 @@ function updateTreeSection() {
   updateTreeArticle();
 }
 
+
 function updateTreeArticle() {
 
   const law = document.getElementById("treeLaw").value;
   const section = document.getElementById("treeSection").value;
 
+  const selectedCategories = getSelectedCategories();
+
   treeArticleValues = [...new Set(
     lawsData
+      .filter(v => selectedCategories.includes(v._category))
       .filter(v => !law || v.top === law)
       .filter(v => !section || v.mid === section)
       .map(v => v.sub)
@@ -274,6 +285,7 @@ function updateTreeArticle() {
 
   searchLaw();
 }
+
 
 
 // ===============================
@@ -501,8 +513,11 @@ document
 document
   .querySelectorAll('input[type="checkbox"]')
   .forEach(cb => {
-    cb.addEventListener("change", searchLaw);
+    cb.addEventListener("change", () => {
+      buildTreeStructure();
+    });
   });
+
 
 document.getElementById("treeLaw")
   .addEventListener("change", updateTreeSection);
