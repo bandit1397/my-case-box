@@ -111,12 +111,7 @@
 
   <div class="categoryItem">
     <input type="checkbox" value="criminal" checked>
-    <label>형사</label>
-  </div>
-
-  <div class="categoryItem">
-    <input type="checkbox" value="traffic" checked>
-    <label>교통</label>
+    <label>법></label>
   </div>
 
   <div class="categoryItem">
@@ -192,7 +187,6 @@ let treeArticleValues = [];
 // ===============================
 const jsonFiles = [
   { file: "./data/laws_criminal.json", category: "criminal" },
-  { file: "./data/laws_traffic.json", category: "traffic" },
   { file: "./data/laws_contacts.json", category: "contacts" },
   { file: "./data/laws_procedure.json", category: "procedure" },
   { file: "./data/laws_admin.json", category: "admin" }
@@ -353,7 +347,7 @@ function searchLaw() {
   const results = lawsData.filter(item => {
 
     if (selectedCategories.length > 0 &&
-      !selectedCategories.includes(item.category))
+      !selectedCategories.includes(item._category))
       return false;
 
     if (treeLaw && item.top !== treeLaw) return false;
