@@ -356,9 +356,9 @@ function searchLaw() {
       !selectedCategories.includes(item.category))
       return false;
 
-    if (treeLaw && item.category !== treeLaw) return false;
-    if (treeSection && item.section !== treeSection) return false;
-    if (treeArticle && item.lawTitle !== treeArticle) return false;
+    if (treeLaw && item.top !== treeLaw) return false;
+    if (treeSection && item.mid !== treeSection) return false;
+    if (treeArticle && item.sub !== treeArticle) return false;
 
     if (keywords.length === 0) return true;
 
