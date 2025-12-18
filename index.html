@@ -220,70 +220,59 @@ Promise.allSettled(
 // ===============================
 // 3단 트리 생성
 // ===============================
-function buildTreeStructure() {
+function buildTreeStructure(){
 
-  const selectedCategories = getSelectedCategories();
+  const filtered = getFilteredResults();
 
-  treeLawValues = [...new Set(
-    lawsData
-      .filter(v => selectedCategories.includes(v._category))
-      .map(v => v.top)
-  )];
+  treeLawValues = [...new Set(filtered.map(v => v.top))];
 
   document.getElementById("treeLaw").innerHTML =
     `<option value="">전체</option>` +
-    treeLawValues.map(v =>
-      `<option value="${v}">${v}</option>`
-    ).join("");
+    treeLawValues.map(v => `<option value="${v}">${v}</option>`).join("");
 
   updateTreeSection();
 }
 
 
-function updateTreeSection() {
 
-  const law = document.getElementById("treeLaw").value;
-  const selectedCategories = getSelectedCategories();
+function updateTreeSection(){
+
+  const filtered = getFilteredResults();
+
+  const topValue = document.getElementById("treeLaw").value;
 
   treeSectionValues = [...new Set(
-    lawsData
-      .filter(v => selectedCategories.includes(v._category))
-      .filter(v => !law || v.top === law)
+    filtered
+      .filter(v => !topValue || v.top === topValue)
       .map(v => v.mid)
   )];
 
   document.getElementById("treeSection").innerHTML =
     `<option value="">전체</option>` +
-    treeSectionValues.map(v =>
-      `<option value="${v}">${v}</option>`
-    ).join("");
+    treeSectionValues.map(v => `<option value="${v}">${v}</option>`).join("");
 
   updateTreeArticle();
 }
 
 
-function updateTreeArticle() {
 
-  const law = document.getElementById("treeLaw").value;
-  const section = document.getElementById("treeSection").value;
+function updateTreeArticle(){
 
-  const selectedCategories = getSelectedCategories();
+  const filtered = getFilteredResults();
+
+  const topValue = document.getElementById("treeLaw").value;
+  const midValue = document.getElementById("treeSection").value;
 
   treeArticleValues = [...new Set(
-    lawsData
-      .filter(v => selectedCategories.includes(v._category))
-      .filter(v => !law || v.top === law)
-      .filter(v => !section || v.mid === section)
+    filtered
+      .filter(v => !topValue || v.top === topValue)
+      .filter(v => !midValue || v.mid === midValue)
       .map(v => v.sub)
   )];
 
   document.getElementById("treeArticle").innerHTML =
     `<option value="">전체</option>` +
-    treeArticleValues.map(v =>
-      `<option value="${v}">${v}</option>`
-    ).join("");
-
-  searchLaw();
+    treeArticleValues.map(v => `<option value="${v}">${v}</option>`).join("");
 }
 
 
@@ -333,6 +322,33 @@ function getSelectedCategories() {
   ).map(cb => cb.value);
 }
 
+// ===============================
+// 3.5 검샙 결과 반환 함수
+// ===============================
+
+function getFilteredResults() {
+
+  const input = document.getElementById("searchBox").value.toLowerCase();
+  const selectedCategories = getSelectedCategories();
+
+  const words = input
+    .split(",")
+    .map(w => w.trim())
+    .filter(w => w.length > 0);
+
+  return lawsData.filter(item => {
+
+    if (!selectedCategories.includes(item._category)) return false;
+
+    if (words.length === 0) return true;
+
+    const bundle =
+      `${item.top} ${item.mid} ${item.sub} ${item.text} ${item.note}`
+        .toLowerCase();
+
+    return words.every(w => bundle.includes(w));
+  });
+}
 
 
 // ===============================
