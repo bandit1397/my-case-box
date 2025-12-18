@@ -353,7 +353,7 @@ function searchLaw() {
   const results = lawsData.filter(item => {
 
     if (selectedCategories.length > 0 &&
-      !selectedCategories.includes(item.category))
+      !selectedCategories.includes(item._category))
       return false;
 
     if (treeLaw && item.top !== treeLaw) return false;
