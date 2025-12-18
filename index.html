@@ -515,8 +515,10 @@ document
   .forEach(cb => {
     cb.addEventListener("change", () => {
       buildTreeStructure();
+      searchLaw();
     });
   });
+
 
 
 document.getElementById("treeLaw")
