@@ -515,6 +515,7 @@ function speakText(text) {
 // ===============================
 // 6. 이벤트 연결
 // ===============================
+
 document
   .getElementById("searchBox")
   .addEventListener("input", searchLaw);
@@ -535,15 +536,22 @@ document
     });
   });
 
+document
+  .getElementById("treeLaw")
+  .addEventListener("change", () => {
+    updateTreeSection();
+    searchLaw();
+  });
 
+document
+  .getElementById("treeSection")
+  .addEventListener("change", () => {
+    updateTreeArticle();
+    searchLaw();
+  });
 
-document.getElementById("treeLaw")
-  .addEventListener("change", updateTreeSection);
-
-document.getElementById("treeSection")
-  .addEventListener("change", updateTreeArticle);
-
-document.getElementById("treeArticle")
+document
+  .getElementById("treeArticle")
   .addEventListener("change", searchLaw);
 
 
