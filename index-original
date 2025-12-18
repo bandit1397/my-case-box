@@ -5,7 +5,540 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>단속 법규 검색 시스템</title>
 
+<style><!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>단속 법규 검색 시스템 + 3단 트리 구조 통합</title>
+
 <style>
+  body {
+    font-family: "Apple SD Gothic Neo", sans-serif;
+    margin: 0;
+    background: #f5f5f5;
+    display: flex;
+    height: 100vh;
+  }
+
+  /* ===== 왼쪽 분류 패널 ===== */
+  #leftPanel {
+    width: 260px;
+    background: #ffffff;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+  }
+
+  #leftPanel h2 {
+    margin-top: 0;
+    font-size: 1.1em;
+    color: #333;
+  }
+
+  .categoryItem {
+    margin-bottom: 10px;
+  }
+
+  .categoryItem label {
+    cursor: pointer;
+    font-size: 0.95em;
+  }
+
+  select {
+    width: 100%;
+    font-size: 0.95em;
+    padding: 4px;
+    margin-bottom: 10px;
+  }
+
+  /* ===== 오른쪽 메인 영역 ===== */
+  #rightPanel {
+    flex: 1;
+    padding: 20px;
+  }
+
+  h1 {
+    text-align: center;
+    color: #333;
+  }
+
+  #searchBox {
+    width: 100%;
+    padding: 12px;
+    font-size: 1em;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+  }
+
+  #results {
+    background: white;
+    padding: 15px;
+    border-radius: 6px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  }
+
+  .lawItem {
+    margin-bottom: 15px;
+    padding: 12px;
+    border-left: 5px solid #007bff;
+  }
+
+  .lawItem h3 {
+    margin: 0 0 6px 0;
+    font-size: 1.05em;
+    color: #007bff;
+  }
+
+  .note {
+    margin-top: 6px;
+    font-size: 0.9em;
+    color: #ff6600;
+    white-space: pre-line;
+  }
+
+  .highlight {
+    background-color: #fff3cd;
+    color: #d63300;
+    font-weight: 600;
+    padding: 0 2px;
+    border-radius: 3px;
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- ================== 왼쪽 분류 UI  ================== -->
+<div id="leftPanel">
+
+  <h2>검색 범위</h2>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="criminal" checked>
+    <label>법></label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="contacts" checked>
+    <label>연락처</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="procedure" checked>
+    <label>절차</label>
+  </div>
+
+  <div class="categoryItem">
+    <input type="checkbox" value="admin" checked>
+    <label>행정</label>
+  </div>
+
+  <br>
+
+  <!-- ============= 3단 트리 라디오 ================ -->
+  <h2>3단 트리 검색</h2>
+
+  <select id="treeLaw"></select>
+  <select id="treeSection"></select>
+  <select id="treeArticle"></select>
+
+  <br><br>
+
+  <h2>고지 언어</h2>
+
+  <select id="langSelect">
+    <option value="ko" selected>한국어</option>
+    <option value="en">English</option>
+    <option value="zh">中文</option>
+    <option value="ja">日本語</option>
+    <option value="vi">Tiếng Việt</option>
+  </select>
+
+</div>
+
+<!-- ================== 오른쪽 검색 영역 ================== -->
+<div id="rightPanel">
+
+  <h1>업무 검색 박스</h1>
+
+  <input
+    type="text"
+    id="searchBox"
+    placeholder="단어 입력 (예: 노점, 청소년, 심야, 신호위반)"
+    disabled
+  />
+
+  <div id="results">
+    <p class="loading">법규 데이터 불러오는 중...</p>
+  </div>
+
+</div>
+
+<script>
+// ===============================
+// 1. 전역 데이터
+// ===============================
+let lawsData = [];
+let selectedLang = "ko";
+
+// 트리 데이터 저장용
+let treeLawValues = [];
+let treeSectionValues = [];
+let treeArticleValues = [];
+
+// ===============================
+// 2. JSON 로딩 (다중 파일 통합)
+// ===============================
+const jsonFiles = [
+  { file: "./data/laws_criminal.json", category: "criminal" },
+  { file: "./data/laws_contacts.json", category: "contacts" },
+  { file: "./data/laws_procedure.json", category: "procedure" },
+  { file: "./data/laws_admin.json", category: "admin" }
+];
+
+Promise.allSettled(
+  jsonFiles.map(info =>
+    fetch(info.file)
+      .then(res => res.ok ? res.json() : [])
+      .then(data =>
+        data.map(item => ({
+          ...item,
+          _category: info.category
+        }))
+      )
+  )
+).then(results => {
+
+  lawsData = results
+    .filter(r => r.status === "fulfilled")
+    .flatMap(r => r.value);
+
+  buildTreeStructure();
+
+  document.getElementById("searchBox").disabled = false;
+  document.getElementById("results").innerHTML =
+    "<p>검색어를 입력하세요.</p>";
+});
+
+
+// ===============================
+// 3단 트리 생성
+// ===============================
+function buildTreeStructure() {
+
+  const selectedCategories = getSelectedCategories();
+
+  treeLawValues = [...new Set(
+    lawsData
+      .filter(v => selectedCategories.includes(v._category))
+      .map(v => v.top)
+  )];
+
+  document.getElementById("treeLaw").innerHTML =
+    `<option value="">전체</option>` +
+    treeLawValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  updateTreeSection();
+}
+
+
+function updateTreeSection() {
+
+  const law = document.getElementById("treeLaw").value;
+  const selectedCategories = getSelectedCategories();
+
+  treeSectionValues = [...new Set(
+    lawsData
+      .filter(v => selectedCategories.includes(v._category))
+      .filter(v => !law || v.top === law)
+      .map(v => v.mid)
+  )];
+
+  document.getElementById("treeSection").innerHTML =
+    `<option value="">전체</option>` +
+    treeSectionValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  updateTreeArticle();
+}
+
+
+function updateTreeArticle() {
+
+  const law = document.getElementById("treeLaw").value;
+  const section = document.getElementById("treeSection").value;
+
+  const selectedCategories = getSelectedCategories();
+
+  treeArticleValues = [...new Set(
+    lawsData
+      .filter(v => selectedCategories.includes(v._category))
+      .filter(v => !law || v.top === law)
+      .filter(v => !section || v.mid === section)
+      .map(v => v.sub)
+  )];
+
+  document.getElementById("treeArticle").innerHTML =
+    `<option value="">전체</option>` +
+    treeArticleValues.map(v =>
+      `<option value="${v}">${v}</option>`
+    ).join("");
+
+  searchLaw();
+}
+
+
+
+// ===============================
+// 3. 유틸 함수
+// ===============================
+function removeLeadingNumbers(text) {
+  return text
+    .replace(/^\s*\d+[\.\)\-]?\s*/gm, "")
+    .replace(/\n{2,}/g, "\n")
+    .trim();
+}
+
+function highlightText(text, keywords) {
+  if (!text || keywords.length === 0) return text;
+
+  let highlighted = text;
+
+  keywords.forEach(keyword => {
+    if (!keyword) return;
+
+    const regex = new RegExp(`(${keyword})`, "gi");
+    highlighted = highlighted.replace(
+      regex,
+      `<span class="highlight">$1</span>`
+    );
+  });
+
+  return highlighted;
+}
+
+function linkifyPhoneNumbers(text) {
+  if (!text) return text;
+
+  const phoneRegex = /(\d{2,3}-\d{3,4}-\d{4})/g;
+
+  return text.replace(phoneRegex, number => {
+    const telNumber = number.replace(/-/g, "");
+    return `<a href="tel:${telNumber}" style="color:#007bff; text-decoration:underline;">${number}</a>`;
+  });
+}
+
+function getSelectedCategories() {
+  return Array.from(
+    document.querySelectorAll('input[type="checkbox"]:checked')
+  ).map(cb => cb.value);
+}
+
+
+
+// ===============================
+// 4. 검색
+// ===============================
+function searchLaw() {
+
+  const input = document.getElementById("searchBox").value;
+
+  const keywords = input
+    .split(",")
+    .map(k => k.trim().toLowerCase())
+    .filter(k => k.length > 0);
+
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "";
+
+  const selectedCategories = getSelectedCategories();
+
+  const treeLaw = document.getElementById("treeLaw").value;
+  const treeSection = document.getElementById("treeSection").value;
+  const treeArticle = document.getElementById("treeArticle").value;
+
+  const results = lawsData.filter(item => {
+
+    if (selectedCategories.length > 0 &&
+      !selectedCategories.includes(item._category))
+      return false;
+
+    if (treeLaw && item.top !== treeLaw) return false;
+    if (treeSection && item.mid !== treeSection) return false;
+    if (treeArticle && item.sub !== treeArticle) return false;
+
+    if (keywords.length === 0) return true;
+
+    const lawText =
+    `${item.top || ""} ${item.mid || ""} ${item.sub || ""}`.toLowerCase();
+
+    const text = (item.text || "").toLowerCase();
+
+    const noteText =
+      typeof item.note === "string"
+        ? item.note
+        : item.note
+        ? Object.values(item.note).join(" ")
+        : "";
+
+    const note = noteText.toLowerCase();
+
+    let tagString = "";
+    if (Array.isArray(item.tags)) {
+      tagString = item.tags.join(" ").toLowerCase();
+    }
+
+    return keywords.every(keyword =>
+      lawText.includes(keyword) ||
+      text.includes(keyword) ||
+      note.includes(keyword) ||
+      tagString.includes(keyword)
+    );
+  });
+
+
+  if (results.length === 0) {
+    resultsDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+    return;
+  }
+
+
+  results.forEach(item => {
+
+    const div = document.createElement("div");
+    div.className = "lawItem";
+
+    let noteHtml = "";
+    let ttsText = "";
+    let showTTS = item.tts === true;
+
+    const highlightedText = linkifyPhoneNumbers(
+      highlightText(item.text, keywords)
+    );
+
+    if (typeof item.note === "string") {
+
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(item.note, keywords)
+      );
+
+      noteHtml = `<p class="note">${highlightedNote}</p>`;
+      ttsText = removeLeadingNumbers(item.note);
+    }
+
+    if (typeof item.note === "object") {
+
+      const raw = item.note[selectedLang] || item.note["ko"];
+
+      const highlightedNote = linkifyPhoneNumbers(
+        highlightText(raw, keywords)
+      );
+
+      noteHtml = `<p class="note">${highlightedNote}</p>`;
+      ttsText = removeLeadingNumbers(raw);
+    }
+
+    div.innerHTML = `
+      <h3>${item.top}
+      ${item.mid ? " / " + item.mid : ""}
+      ${item.sub ? " / " + item.sub : ""}</h3>
+
+
+      <p class="textContent" style="white-space: pre-line;">
+        ${highlightedText}
+      </p>
+
+      ${noteHtml}
+
+      ${
+        showTTS && ttsText
+          ? `<button class="tts-btn" onclick="speakText(\`${ttsText}\`)">
+              🔊 고지문 음성 출력
+             </button>`
+          : ""
+      }
+    `;
+
+    resultsDiv.appendChild(div);
+  });
+}
+
+
+
+// ===============================
+// 5. TTS 음성 출력
+// ===============================
+function speakText(text) {
+
+  if (!("speechSynthesis" in window)) {
+    alert("이 브라우저는 음성출력을 지원하지 않습니다.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+
+  const langMap = {
+    ko: "ko-KR",
+    en: "en-US",
+    zh: "zh-CN",
+    ja: "ja-JP",
+    vi: "vi-VN"
+  };
+
+  utterance.lang = langMap[selectedLang] || "ko-KR";
+  utterance.rate = 0.85;
+  utterance.pitch = 1.0;
+  utterance.volume = 1.0;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+
+
+// ===============================
+// 6. 이벤트 연결
+// ===============================
+document
+  .getElementById("searchBox")
+  .addEventListener("input", searchLaw);
+
+document
+  .getElementById("langSelect")
+  .addEventListener("change", e => {
+    selectedLang = e.target.value;
+    searchLaw();
+  });
+
+document
+  .querySelectorAll('input[type="checkbox"]')
+  .forEach(cb => {
+    cb.addEventListener("change", () => {
+      buildTreeStructure();
+    });
+  });
+
+
+document.getElementById("treeLaw")
+  .addEventListener("change", updateTreeSection);
+
+document.getElementById("treeSection")
+  .addEventListener("change", updateTreeArticle);
+
+document.getElementById("treeArticle")
+  .addEventListener("change", searchLaw);
+
+
+</script>
+</body>
+</html>
   body {
     font-family: "Apple SD Gothic Neo", sans-serif;
     margin: 20px;
