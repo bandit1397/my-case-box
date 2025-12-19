@@ -367,6 +367,7 @@ function searchLaw() {
   resultsDiv.innerHTML = "";
 
   const selectedCategories = getSelectedCategories();
+
   const treeLaw = document.getElementById("treeLaw").value;
   const treeSection = document.getElementById("treeSection").value;
   const treeArticle = document.getElementById("treeArticle").value;
@@ -374,38 +375,27 @@ function searchLaw() {
   const results = lawsData.filter(item => {
 
     if (selectedCategories.length > 0 &&
-      !selectedCategories.includes(item._category)) return false;
+      !selectedCategories.includes(item._category))
+      return false;
 
     if (treeLaw && item.top !== treeLaw) return false;
     if (treeSection && item.mid !== treeSection) return false;
     if (treeArticle && item.sub !== treeArticle) return false;
 
-    // ================================
-    // text 배열 처리
-    // ================================
-    let textStr = "";
-    if (Array.isArray(item.text)) {
-      textStr = item.text.map(t => t.text).join(" ");
-    } else {
-      textStr = item.text || "";
-    }
+    if (keywords.length === 0) return true;
 
-    // ================================
-    // note 배열 처리
-    // ================================
-    let noteStr = "";
-    if (Array.isArray(item.note)) {
-      noteStr = item.note.map(n => n.text).join(" ");
-    } else if (typeof item.note === "string") {
-      noteStr = item.note;
-    }
+    const lawText =
+      `${item.top || ""} ${item.mid || ""} ${item.sub || ""}`.toLowerCase();
 
-    // ================================
-    // 전체 텍스트 묶음
-    // ================================
-    const lawText = `${item.top || ""} ${item.mid || ""} ${item.sub || ""}`.toLowerCase();
-    const noteText = noteStr.toLowerCase();
-    const mainText = textStr.toLowerCase();
+    const text = Array.isArray(item.text)
+      ? item.text.map(t => t.text).join(" ").toLowerCase()
+      : (item.text || "").toLowerCase();
+
+    const noteText = Array.isArray(item.note)
+      ? item.note.map(n => n.text).join(" ").toLowerCase()
+      : typeof item.note === "string"
+      ? item.note.toLowerCase()
+      : "";
 
     let tagString = "";
     if (Array.isArray(item.tags)) {
@@ -414,7 +404,7 @@ function searchLaw() {
 
     return keywords.every(keyword =>
       lawText.includes(keyword) ||
-      mainText.includes(keyword) ||
+      text.includes(keyword) ||
       noteText.includes(keyword) ||
       tagString.includes(keyword)
     );
@@ -425,9 +415,6 @@ function searchLaw() {
     return;
   }
 
-  // ================================
-  // 검색 결과 렌더링
-  // ================================
   results.forEach(item => {
 
     const div = document.createElement("div");
@@ -442,17 +429,14 @@ function searchLaw() {
     let textHtml = "";
     if (Array.isArray(item.text)) {
       item.text.forEach(txtObj => {
-        const highlightedText = linkifyPhoneNumbers(
-          highlightText(txtObj.text, keywords)
-        );
-        textHtml += `<p class="textContent" style="white-space: pre-line; margin-left:${txtObj.depth * 1.5}em;">
-                        ${highlightedText}
-                     </p>`;
+        if (!txtObj.text.trim()) return; // 빈 문자열 skip
+        const highlightedText = linkifyPhoneNumbers(highlightText(txtObj.text, keywords));
+        textHtml += `<p class="textContent" style="margin-left:${txtObj.depth * 1.5}em;">${highlightedText}</p>`;
         ttsText += removeLeadingNumbers(txtObj.text) + "\n";
       });
-    } else {
+    } else if (item.text && item.text.trim()) {
       const highlightedText = linkifyPhoneNumbers(highlightText(item.text, keywords));
-      textHtml = `<p class="textContent" style="white-space: pre-line;">${highlightedText}</p>`;
+      textHtml = `<p class="textContent">${highlightedText}</p>`;
       ttsText = removeLeadingNumbers(item.text);
     }
 
@@ -462,14 +446,12 @@ function searchLaw() {
     let noteHtml = "";
     if (Array.isArray(item.note)) {
       item.note.forEach(noteObj => {
-        const raw = noteObj.text;
-        const highlightedNote = linkifyPhoneNumbers(highlightText(raw, keywords));
-        noteHtml += `<p class="note" style="margin-left:${noteObj.depth * 1.5}em;">
-                       ${highlightedNote}
-                     </p>`;
-        ttsText += removeLeadingNumbers(raw) + "\n";
+        if (!noteObj.text.trim()) return; // 빈 문자열 skip
+        const highlightedNote = linkifyPhoneNumbers(highlightText(noteObj.text, keywords));
+        noteHtml += `<p class="note" style="margin-left:${noteObj.depth * 1.5}em;">${highlightedNote}</p>`;
+        ttsText += removeLeadingNumbers(noteObj.text) + "\n";
       });
-    } else if (typeof item.note === "string") {
+    } else if (typeof item.note === "string" && item.note.trim()) {
       const highlightedNote = linkifyPhoneNumbers(highlightText(item.note, keywords));
       noteHtml = `<p class="note">${highlightedNote}</p>`;
       ttsText += removeLeadingNumbers(item.note);
