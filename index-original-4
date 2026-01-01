@@ -455,7 +455,28 @@ function searchLaw() {
       const highlightedNote = linkifyPhoneNumbers(highlightText(item.note, keywords));
       noteHtml = `<p class="note">${highlightedNote}</p>`;
       ttsText += removeLeadingNumbers(item.note);
-    }
+    } // =========================
+      // note 처리 (다국어 객체 대응) ⭐ 핵심 수정
+      // =========================
+      else if (
+        typeof item.note === "object" &&
+        item.note !== null &&
+        item.note[selectedLang]
+      ) {
+        const rawNote = item.note[selectedLang].trim();
+        if (rawNote) {
+          const highlightedNote = linkifyPhoneNumbers(
+            highlightText(rawNote, keywords)
+          );
+          noteHtml = `<p class="note">${highlightedNote}</p>`;
+          ttsText += removeLeadingNumbers(rawNote);
+        }
+      }
+
+
+
+
+    
 
     // =========================
     // 최종 HTML
